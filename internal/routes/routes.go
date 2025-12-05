@@ -2,6 +2,7 @@ package routes
 
 import (
 	"go-booking-system/internal/handler"
+	"go-booking-system/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,17 +19,17 @@ func SetupRoutes(
 		health.GET("/", healthHandler.HealthStatus)
 	}
 
-	// Account routes (public)
+	// Account routes (public - no authentication required)
 	account := router.Group("/api/account")
 	{
 		account.POST("/signup", accountHandler.SignUp)
 		account.POST("/signin", accountHandler.SignIn)
 	}
 
-	// Protected routes (we'll add these later)
-	// protected := router.Group("/api")
-	// protected.Use(middleware.RequireAuth())
-	// {
-	//     protected.GET("/profile", profileHandler.GetProfile)
-	// }
+	// Protected routes (require JWT authentication)
+	protected := router.Group("/api/account")
+	protected.Use(middleware.RequireAuth()) // Apply JWT verification middleware
+	{
+		protected.GET("/profile", accountHandler.GetProfile)
+	}
 }

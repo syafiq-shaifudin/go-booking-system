@@ -93,3 +93,50 @@ func (h *AccountHandler) SignIn(c *gin.Context) {
 	// Return success response
 	c.JSON(http.StatusOK, result)
 }
+
+// GetProfile godoc
+// @Summary Get user profile
+// @Description Get the authenticated user's profile information
+// @Tags Account
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} dto.UserResponse "User profile"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized - invalid or missing token"
+// @Failure 404 {object} dto.ErrorResponse "User not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /api/account/profile [get]
+func (h *AccountHandler) GetProfile(c *gin.Context) {
+	// Get the user UUID that the middleware stored in context
+	// The RequireAuth middleware extracts this from the JWT token
+	userUUID, exists := c.Get("userUUID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Error: "User not found in context",
+		})
+		return
+	}
+
+	// Convert interface{} to string
+	uuid, ok := userUUID.(string)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{
+			Error: "Invalid user UUID format",
+		})
+		return
+	}
+
+	// Call service layer for business logic
+	result, err := h.accountService.GetProfile(uuid)
+	if err != nil {
+		// Handle specific errors
+		if err.Error() == "user not found" {
+			c.JSON(http.StatusNotFound, dto.ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	// Return success response
+	c.JSON(http.StatusOK, result)
+}

@@ -16,6 +16,7 @@ import (
 type AccountService interface {
 	SignUp(req dto.SignUpRequest) (*dto.SignUp_Success, error)
 	SignIn(req dto.SignInRequest) (*dto.SignUp_Success, error)
+	GetProfile(uuid string) (*dto.UserResponse, error)
 }
 
 // accountService implements AccountService
@@ -128,6 +129,27 @@ func (s *accountService) SignIn(req dto.SignInRequest) (*dto.SignUp_Success, err
 			CreatedAt: user.CreatedAt.Format(time.RFC3339),
 		},
 		Token: token,
+	}, nil
+}
+
+// GetProfile retrieves user profile by UUID
+func (s *accountService) GetProfile(uuid string) (*dto.UserResponse, error) {
+	// Find user by UUID
+	user, err := s.userRepo.FindByUUID(uuid)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
+		return nil, errors.New("failed to retrieve user profile")
+	}
+
+	// Build response DTO
+	return &dto.UserResponse{
+		UUID:      user.UUID,
+		Email:     user.Email,
+		Name:      user.Name,
+		Phone:     user.Phone,
+		CreatedAt: user.CreatedAt.Format(time.RFC3339),
 	}, nil
 }
 
