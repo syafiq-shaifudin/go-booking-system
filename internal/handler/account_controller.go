@@ -100,6 +100,7 @@ func (h *AccountHandler) SignIn(c *gin.Context) {
 // @Tags Account
 // @Security BearerAuth
 // @Produce json
+// @Param Authorization header string true "Bearer token" default(Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c)
 // @Success 200 {object} dto.UserResponse "User profile"
 // @Failure 401 {object} dto.ErrorResponse "Unauthorized - invalid or missing token"
 // @Failure 404 {object} dto.ErrorResponse "User not found"

@@ -11,8 +11,6 @@ import (
 )
 
 // RequireAuth validates JWT tokens and protects routes
-// This middleware extracts the JWT from Authorization header,
-// verifies the signature and expiration, then allows access
 func RequireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Step 1: Get Authorization header
@@ -27,8 +25,6 @@ func RequireAuth() gin.HandlerFunc {
 		}
 
 		// Step 2: Extract token string (remove "Bearer " prefix)
-		// Input:  "Bearer eyJhbGciOiJIUzI1NiIsInR..."
-		// Output: "eyJhbGciOiJIUzI1NiIsInR..."
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		if tokenString == authHeader {
 			// TrimPrefix didn't change anything = "Bearer " wasn't there
@@ -40,13 +36,7 @@ func RequireAuth() gin.HandlerFunc {
 		}
 
 		// Step 3: Parse and verify the token
-		// This does several checks:
-		// - Decodes the token
-		// - Verifies signature using JWT_SECRET
-		// - Checks expiration time
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			// Provide the same secret key used to sign the token
-			// This MUST match the key in account_service.go:142
 			return []byte(os.Getenv("JWT_SECRET")), nil
 		})
 

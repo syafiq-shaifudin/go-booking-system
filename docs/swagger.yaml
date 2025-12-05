@@ -14,17 +14,6 @@ definitions:
         example: 0
         type: integer
     type: object
-  dto.SignIn_Success:
-    properties:
-      message:
-        example: Login successful
-        type: string
-      token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-        type: string
-      user:
-        $ref: '#/definitions/dto.UserResponse'
-    type: object
   dto.SignInRequest:
     properties:
       email:
@@ -92,6 +81,40 @@ definitions:
 info:
   contact: {}
 paths:
+  /api/account/profile:
+    get:
+      description: Get the authenticated user's profile information
+      parameters:
+      - default: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "401":
+          description: Unauthorized - invalid or missing token
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user profile
+      tags:
+      - Account
   /api/account/signin:
     post:
       consumes:
@@ -110,7 +133,7 @@ paths:
         "200":
           description: Login successful
           schema:
-            $ref: '#/definitions/dto.SignIn_Success'
+            $ref: '#/definitions/dto.SignUp_Success'
         "400":
           description: Invalid input data
           schema:
