@@ -14,5 +14,5 @@ docker run --name postgres_db  -e POSTGRES_USER=root -e POSTGRES_PASSWORD=asdqwe
 
 2. use air to run the dev
 
-3. swag init (in root directoty refrest the swagger)
+3. swag init -g cmd/api/main.go (in root directoty refrest the swagger)
 

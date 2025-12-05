@@ -134,9 +134,124 @@ Ready to proceed with:
 
 ---
 
+## Step 2: DTO Layer - ✅ COMPLETED (2025-12-05)
+
+### What Was Done
+
+Created Data Transfer Objects (DTOs) to separate API contracts from domain models and replaced inline structs with proper DTOs.
+
+### Files Created
+
+#### 1. `internal/dto/requests.go`
+- `SignUpRequest` - User registration payload with validation
+- `SignInRequest` - User login payload with validation
+
+#### 2. `internal/dto/responses.go`
+- `UserResponse` - User data in API responses
+- `AuthResponse` - Authentication response for signup/signin
+- `HealthResponse` - Health check response
+- `ErrorResponse` - Standardized error response
+
+### Changes Made
+
+#### 1. Updated Handlers
+**`internal/handler/account_controller.go`:**
+- ✅ Removed inline `SignUpInput` and `SignInInput` structs
+- ✅ Added import: `"go-booking-system/internal/dto"`
+- ✅ Replaced `SignUpInput` → `dto.SignUpRequest`
+- ✅ Replaced `SignInInput` → `dto.SignInRequest`
+- ✅ Replaced `gin.H{}` responses → `dto.AuthResponse` and `dto.ErrorResponse`
+- ✅ Updated Swagger annotations to reference proper DTOs
+- ✅ Added complete user data in responses (ID, UUID, Email, Name, Phone, CreatedAt)
+
+**`internal/handler/health_controller.go`:**
+- ✅ Added import: `"go-booking-system/internal/dto"`
+- ✅ Replaced `gin.H{}` → `dto.HealthResponse`
+- ✅ Updated Swagger annotations
+
+#### 2. Swagger Documentation
+- ✅ Regenerated Swagger docs with `swag init -g cmd/api/main.go`
+- ✅ All DTOs properly documented:
+  - `dto.SignUpRequest`
+  - `dto.SignInRequest`
+  - `dto.AuthResponse`
+  - `dto.UserResponse`
+  - `dto.HealthResponse`
+  - `dto.ErrorResponse`
+
+### Verification
+
+✅ Project builds successfully
+✅ Swagger docs generated with all DTOs
+✅ All responses now use structured DTOs
+✅ No breaking changes to API behavior
+
+### Benefits Achieved
+
+1. **Clean Separation of Concerns**
+   - API contracts separated from domain models
+   - Request/response structures in dedicated package
+   - Handlers no longer define their own structs
+
+2. **Better API Documentation**
+   - Swagger shows exact request/response structures
+   - Example values in Swagger UI
+   - Clear field types and validation rules
+
+3. **Reusability**
+   - DTOs can be reused across handlers
+   - Consistent response format across all endpoints
+   - Easy to version APIs (can create dto/v2 later)
+
+4. **Type Safety**
+   - Replaced `gin.H{}` (map) with typed structs
+   - Compile-time type checking
+   - IDE autocomplete support
+
+### API Response Comparison
+
+**Before (gin.H):**
+```json
+{
+  "message": "User registered successfully",
+  "user": {
+    "id": "uuid-here",
+    "email": "user@example.com",
+    "name": "John Doe"
+  },
+  "token": "jwt-token-here"
+}
+```
+
+**After (dto.AuthResponse):**
+```json
+{
+  "message": "User registered successfully",
+  "user": {
+    "id": 1,
+    "uuid": "uuid-here",
+    "email": "user@example.com",
+    "name": "John Doe",
+    "phone": "+1234567890",
+    "created_at": "2025-12-05T09:00:00Z"
+  },
+  "token": "jwt-token-here"
+}
+```
+
+### Next Steps
+
+Ready to proceed with:
+- **Step 3:** Create repository layer (database access)
+- **Step 4:** Create service layer (business logic)
+- **Step 5:** Add structured logging
+
+---
+
 ## Notes
 
 - All existing functionality preserved
 - No breaking changes to API endpoints
 - Application runs exactly as before
 - Foundation laid for clean architecture
+- DTOs provide clear API contracts

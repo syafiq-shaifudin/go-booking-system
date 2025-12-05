@@ -1,4 +1,10 @@
 definitions:
+  dto.ErrorResponse:
+    properties:
+      error:
+        example: Error Message
+        type: string
+    type: object
   dto.HealthResponse:
     properties:
       message:
@@ -8,7 +14,41 @@ definitions:
         example: 0
         type: integer
     type: object
-  dto.req_signUp_successfulRegistration:
+  dto.SignIn_Success:
+    properties:
+      message:
+        example: Login successful
+        type: string
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserResponse'
+    type: object
+  dto.SignInRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: password123
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  dto.SignUp_Success:
+    properties:
+      message:
+        example: Login successful
+        type: string
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserResponse'
+    type: object
+  dto.SignUpRequest:
     properties:
       country:
         example: US
@@ -31,81 +71,104 @@ definitions:
     - name
     - password
     type: object
-  dto.res_signUp_existingEmail:
+  dto.UserResponse:
     properties:
-      error:
-        example: Email already registered
+      created_at:
+        example: "2024-12-05T08:00:00Z"
         type: string
-    type: object
-  dto.res_signUp_failed:
-    properties:
-      error:
-        example: Failed to create user
+      email:
+        example: user@example.com
         type: string
-    type: object
-  dto.res_signUp_successfulRegistration:
-    properties:
-      message:
-        example: User registered successfully
+      name:
+        example: John Doe
         type: string
-      token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjU0Mzk4NjMsInVzZXJfaWQiOjE1fQ.aFyEd7PjWTbcBiRRyBoco98fQbU6r3mfNXXPcJhRias
+      phone:
+        example: "+1234567890"
         type: string
-      user:
-        properties:
-          email:
-            example: user@example.com
-            type: string
-          emanameil:
-            example: John Doe
-            type: string
-          uuid:
-            example: d883d46d-7e74-4340-ba36-cf98341d6f4b
-            type: string
-        type: object
+      uuid:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
     type: object
 info:
   contact: {}
 paths:
-  /api/account/signup:
+  /api/account/signin:
     post:
       consumes:
       - application/json
-      description: Register a new user account
+      description: Authenticate user with email and password
       parameters:
-      - description: Sign up credentials
+      - description: Login credentials
         in: body
         name: input
         required: true
         schema:
-          $ref: '#/definitions/dto.req_signUp_successfulRegistration'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: User created successfully
-          schema:
-            $ref: '#/definitions/dto.res_signUp_successfulRegistration'
-        "409":
-          description: Email Already Exist
-          schema:
-            $ref: '#/definitions/dto.res_signUp_existingEmail'
-        "500":
-          description: Failed to hash password / Failed to create user / Failed to
-            generate token
-          schema:
-            $ref: '#/definitions/dto.res_signUp_failed'
-      summary: Sign Up
-      tags:
-      - Account
-  /api/health:
-    get:
-      description: Check if the server is running and healthy
+          $ref: '#/definitions/dto.SignInRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: Server is Healthy
+          description: Login successful
+          schema:
+            $ref: '#/definitions/dto.SignIn_Success'
+        "400":
+          description: Invalid input data
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: User login
+      tags:
+      - Account
+  /api/account/signup:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account with email, password, name, phone, and
+        country
+      parameters:
+      - description: User registration data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SignUpRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User registered successfully
+          schema:
+            $ref: '#/definitions/dto.SignUp_Success'
+        "400":
+          description: Invalid input data
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Email already registered
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - Account
+  /api/health/:
+    get:
+      description: Check if the server is running and healthy. Status 0 means healthy.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Server is healthy
           schema:
             $ref: '#/definitions/dto.HealthResponse'
       summary: Health check endpoint

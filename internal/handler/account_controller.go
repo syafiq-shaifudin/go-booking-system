@@ -3,6 +3,7 @@ package handler
 import (
 	"go-booking-system/config"
 	"go-booking-system/internal/domain"
+	"go-booking-system/internal/dto"
 	"net/http"
 	"os"
 	"time"
@@ -11,44 +12,31 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-type SignUpInput struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
-	Name     string `json:"name" binding:"required"`
-	Phone    string `json:"phone"`
-	Country  string `json:"country"`
-}
-
-type SignInInput struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
-}
-
 // SignUp godoc
-// @Summary Sign Up
-// @Description Register a new user account
+// @Summary Register a new user
+// @Description Create a new user account with email, password, name, phone, and country
 // @Tags Account
 // @Accept json
 // @Produce json
-// @Param input body dto.req_signUp_successfulRegistration true "Sign up credentials"
-// @Success 201 {object} dto.res_signUp_successfulRegistration "User created successfully"
-// @Success 409  {object} dto.res_signUp_existingEmail "Email Already Exist"
-// @Success 500  {object} dto.res_signUp_failed "Failed to hash password / Failed to create user / Failed to generate token"
+// @Param input body dto.SignUpRequest true "User registration data"
+// @Success 201 {object} dto.SignUp_Success "User registered successfully"
+// @Failure 400 {object} dto.ErrorResponse "Invalid input data"
+// @Failure 409 {object} dto.ErrorResponse "Email already registered"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /api/account/signup [post]
-// Sign Up Handler
 func SignUp(c *gin.Context) {
-	var input SignUpInput
+	var input dto.SignUpRequest
 
 	// Validate input
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
 
 	// Check if user already exists
 	var existingUser domain.User
 	if err := config.DB.Where("email = ?", input.Email).First(&existingUser).Error; err == nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "Email already registered"})
+		c.JSON(http.StatusConflict, dto.ErrorResponse{Error: "Email already registered"})
 		return
 	}
 
@@ -70,71 +58,88 @@ func SignUp(c *gin.Context) {
 
 	// Hash password
 	if err := user.HashPassword(input.Password); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "Failed to hash password"})
 		return
 	}
 
 	// Save to database
 	if err := config.DB.Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "Failed to create user"})
 		return
 	}
 
 	// Generate JWT token
 	token, err := generateToken(user.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "Failed to generate token"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "User registered successfully",
-		"user": gin.H{
-			"id":    user.UUID,
-			"email": user.Email,
-			"name":  user.Name,
+	// Return success response using DTO
+	c.JSON(http.StatusCreated, dto.SignUp_Success{
+		Message: "User registered successfully",
+		User: dto.UserResponse{
+			UUID:      user.UUID,
+			Email:     user.Email,
+			Name:      user.Name,
+			Phone:     user.Phone,
+			CreatedAt: user.CreatedAt.Format(time.RFC3339),
 		},
-		"token": token,
+		Token: token,
 	})
 }
 
-// Sign In Handler
+// SignIn godoc
+// @Summary User login
+// @Description Authenticate user with email and password
+// @Tags Account
+// @Accept json
+// @Produce json
+// @Param input body dto.SignInRequest true "Login credentials"
+// @Success 200 {object} dto.SignIn_Success "Login successful"
+// @Failure 400 {object} dto.ErrorResponse "Invalid input data"
+// @Failure 401 {object} dto.ErrorResponse "Invalid credentials"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /api/account/signin [post]
 func SignIn(c *gin.Context) {
-	var input SignInInput
+	var input dto.SignInRequest
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
 
 	// Find user
 	var user domain.User
 	if err := config.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{Error: "Invalid credentials"})
 		return
 	}
 
 	// Check password
 	if err := user.CheckPassword(input.Password); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		c.JSON(http.StatusUnauthorized, dto.ErrorResponse{Error: "Invalid credentials"})
 		return
 	}
 
 	// Generate token
 	token, err := generateToken(user.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "Failed to generate token"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Login successful",
-		"user": gin.H{
-			"id":    user.ID,
-			"email": user.Email,
-			"name":  user.Name,
+	// Return success response using DTO
+	c.JSON(http.StatusOK, dto.SignUp_Success{
+		Message: "Login successful",
+		User: dto.UserResponse{
+			UUID:      user.UUID,
+			Email:     user.Email,
+			Name:      user.Name,
+			Phone:     user.Phone,
+			CreatedAt: user.CreatedAt.Format(time.RFC3339),
 		},
-		"token": token,
+		Token: token,
 	})
 }
 

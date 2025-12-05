@@ -4,9 +4,9 @@
         "contact": {}
     },
     "paths": {
-        "/api/account/signup": {
+        "/api/account/signin": {
             "post": {
-                "description": "Register a new user account",
+                "description": "Authenticate user with email and password",
                 "consumes": [
                     "application/json"
                 ],
@@ -16,43 +16,101 @@
                 "tags": [
                     "Account"
                 ],
-                "summary": "Sign Up",
+                "summary": "User login",
                 "parameters": [
                     {
-                        "description": "Sign up credentials",
+                        "description": "Login credentials",
                         "name": "input",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.req_signUp_successfulRegistration"
+                            "$ref": "#/definitions/dto.SignInRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "User created successfully",
+                    "200": {
+                        "description": "Login successful",
                         "schema": {
-                            "$ref": "#/definitions/dto.res_signUp_successfulRegistration"
+                            "$ref": "#/definitions/dto.SignIn_Success"
                         }
                     },
-                    "409": {
-                        "description": "Email Already Exist",
+                    "400": {
+                        "description": "Invalid input data",
                         "schema": {
-                            "$ref": "#/definitions/dto.res_signUp_existingEmail"
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Failed to hash password / Failed to create user / Failed to generate token",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/dto.res_signUp_failed"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/api/health": {
+        "/api/account/signup": {
+            "post": {
+                "description": "Create a new user account with email, password, name, phone, and country",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Register a new user",
+                "parameters": [
+                    {
+                        "description": "User registration data",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.SignUpRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "User registered successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SignUp_Success"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input data",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Email already registered",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/health/": {
             "get": {
-                "description": "Check if the server is running and healthy",
+                "description": "Check if the server is running and healthy. Status 0 means healthy.",
                 "produces": [
                     "application/json"
                 ],
@@ -62,7 +120,7 @@
                 "summary": "Health check endpoint",
                 "responses": {
                     "200": {
-                        "description": "Server is Healthy",
+                        "description": "Server is healthy",
                         "schema": {
                             "$ref": "#/definitions/dto.HealthResponse"
                         }
@@ -72,6 +130,15 @@
         }
     },
     "definitions": {
+        "dto.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Error Message"
+                }
+            }
+        },
         "dto.HealthResponse": {
             "type": "object",
             "properties": {
@@ -85,7 +152,40 @@
                 }
             }
         },
-        "dto.req_signUp_successfulRegistration": {
+        "dto.SignInRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "password123"
+                }
+            }
+        },
+        "dto.SignIn_Success": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Login successful"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                },
+                "user": {
+                    "$ref": "#/definitions/dto.UserResponse"
+                }
+            }
+        },
+        "dto.SignUpRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -116,51 +216,44 @@
                 }
             }
         },
-        "dto.res_signUp_existingEmail": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string",
-                    "example": "Email already registered"
-                }
-            }
-        },
-        "dto.res_signUp_failed": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string",
-                    "example": "Failed to create user"
-                }
-            }
-        },
-        "dto.res_signUp_successfulRegistration": {
+        "dto.SignUp_Success": {
             "type": "object",
             "properties": {
                 "message": {
                     "type": "string",
-                    "example": "User registered successfully"
+                    "example": "Login successful"
                 },
                 "token": {
                     "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjU0Mzk4NjMsInVzZXJfaWQiOjE1fQ.aFyEd7PjWTbcBiRRyBoco98fQbU6r3mfNXXPcJhRias"
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                 },
                 "user": {
-                    "type": "object",
-                    "properties": {
-                        "email": {
-                            "type": "string",
-                            "example": "user@example.com"
-                        },
-                        "emanameil": {
-                            "type": "string",
-                            "example": "John Doe"
-                        },
-                        "uuid": {
-                            "type": "string",
-                            "example": "d883d46d-7e74-4340-ba36-cf98341d6f4b"
-                        }
-                    }
+                    "$ref": "#/definitions/dto.UserResponse"
+                }
+            }
+        },
+        "dto.UserResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2024-12-05T08:00:00Z"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "+1234567890"
+                },
+                "uuid": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
                 }
             }
         }
