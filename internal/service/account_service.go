@@ -51,8 +51,7 @@ func (s *accountService) SignUp(req dto.SignUpRequest) (*dto.SignUp_Success, err
 	if req.Country != "" {
 		country, err := s.countryRepo.FindByShortname(req.Country)
 		if err != nil {
-			// Country not found - continue without it (non-critical)
-			// In production, you might want to log this
+			// Country not found
 		} else {
 			mobileCountryID = &country.ID
 		}
@@ -77,7 +76,7 @@ func (s *accountService) SignUp(req dto.SignUpRequest) (*dto.SignUp_Success, err
 	}
 
 	// Generate JWT token
-	token, err := s.generateToken(user.ID)
+	token, err := s.generateToken(user.UUID)
 	if err != nil {
 		return nil, errors.New("failed to generate token")
 	}
@@ -113,7 +112,7 @@ func (s *accountService) SignIn(req dto.SignInRequest) (*dto.SignUp_Success, err
 	}
 
 	// Generate JWT token
-	token, err := s.generateToken(user.ID)
+	token, err := s.generateToken(user.UUID)
 	if err != nil {
 		return nil, errors.New("failed to generate token")
 	}
@@ -133,10 +132,10 @@ func (s *accountService) SignIn(req dto.SignInRequest) (*dto.SignUp_Success, err
 }
 
 // generateToken creates a JWT token for the user
-func (s *accountService) generateToken(userID uint) (string, error) {
+func (s *accountService) generateToken(UUID string) (string, error) {
 	claims := jwt.MapClaims{
-		"user_id": userID,
-		"exp":     time.Now().Add(time.Hour * 1).Unix(), // 1 hour
+		"uuid": UUID,
+		"exp":  time.Now().Add(time.Hour * 1).Unix(), // 1 hour
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
