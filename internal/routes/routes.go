@@ -6,22 +6,29 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRoutes(router *gin.Engine) {
+// SetupRoutes configures all application routes with handler dependencies
+func SetupRoutes(
+	router *gin.Engine,
+	accountHandler *handler.AccountHandler,
+	healthHandler *handler.HealthHandler,
+) {
+	// Health check routes
 	health := router.Group("/api/health")
 	{
-		health.GET("/", handler.HealthStatus)
+		health.GET("/", healthHandler.HealthStatus)
 	}
 
+	// Account routes (public)
 	account := router.Group("/api/account")
 	{
-		account.POST("/signup", handler.SignUp)
-		account.POST("/signin", handler.SignIn)
+		account.POST("/signup", accountHandler.SignUp)
+		account.POST("/signin", accountHandler.SignIn)
 	}
 
 	// Protected routes (we'll add these later)
-	// api := router.Group("/api")
-	// api.Use(middleware.AuthMiddleware())
+	// protected := router.Group("/api")
+	// protected.Use(middleware.RequireAuth())
 	// {
-	//     api.GET("/profile", controllers.GetProfile)
+	//     protected.GET("/profile", profileHandler.GetProfile)
 	// }
 }
