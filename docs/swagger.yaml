@@ -1,0 +1,114 @@
+definitions:
+  dto.HealthResponse:
+    properties:
+      message:
+        example: Server is Healthy
+        type: string
+      status:
+        example: 0
+        type: integer
+    type: object
+  dto.req_signUp_successfulRegistration:
+    properties:
+      country:
+        example: US
+        type: string
+      email:
+        example: user@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+      password:
+        example: password123
+        minLength: 6
+        type: string
+      phone:
+        example: "234567890"
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  dto.res_signUp_existingEmail:
+    properties:
+      error:
+        example: Email already registered
+        type: string
+    type: object
+  dto.res_signUp_failed:
+    properties:
+      error:
+        example: Failed to create user
+        type: string
+    type: object
+  dto.res_signUp_successfulRegistration:
+    properties:
+      message:
+        example: User registered successfully
+        type: string
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjU0Mzk4NjMsInVzZXJfaWQiOjE1fQ.aFyEd7PjWTbcBiRRyBoco98fQbU6r3mfNXXPcJhRias
+        type: string
+      user:
+        properties:
+          email:
+            example: user@example.com
+            type: string
+          emanameil:
+            example: John Doe
+            type: string
+          uuid:
+            example: d883d46d-7e74-4340-ba36-cf98341d6f4b
+            type: string
+        type: object
+    type: object
+info:
+  contact: {}
+paths:
+  /api/account/signup:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user account
+      parameters:
+      - description: Sign up credentials
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/dto.req_signUp_successfulRegistration'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created successfully
+          schema:
+            $ref: '#/definitions/dto.res_signUp_successfulRegistration'
+        "409":
+          description: Email Already Exist
+          schema:
+            $ref: '#/definitions/dto.res_signUp_existingEmail'
+        "500":
+          description: Failed to hash password / Failed to create user / Failed to
+            generate token
+          schema:
+            $ref: '#/definitions/dto.res_signUp_failed'
+      summary: Sign Up
+      tags:
+      - Account
+  /api/health:
+    get:
+      description: Check if the server is running and healthy
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Server is Healthy
+          schema:
+            $ref: '#/definitions/dto.HealthResponse'
+      summary: Health check endpoint
+      tags:
+      - Health
+swagger: "2.0"

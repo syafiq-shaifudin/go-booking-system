@@ -1,0 +1,18 @@
+go get -u github.com/gin-gonic/gin
+go get -u gorm.io/gorm
+go get -u gorm.io/driver/postgres
+go get -u github.com/golang-jwt/jwt/v5
+go get -u golang.org/x/crypto/bcrypt
+go get -u github.com/joho/godotenv
+go install github.com/cosmtrek/air@latest //for auto reload during dev
+
+
+1. for postgres db
+pull postgres docker 
+docker run --name postgres_db  -e POSTGRES_USER=root -e POSTGRES_PASSWORD=asdqwe -p 5432:5432 -d postgres:latest
+
+
+2. use air to run the dev
+
+3. swag init (in root directoty refrest the swagger)
+
